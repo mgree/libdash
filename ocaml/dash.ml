@@ -1,6 +1,4 @@
-open Printf
 open Ctypes
-open Ctypes_types
 open Foreign
 
 (* First, some dash trivia. *)
@@ -8,9 +6,9 @@ open Foreign
 type stackmark
               
 let stackmark : stackmark structure typ = structure "stackmark"
-let stackp = field stackmark "stackp" (ptr void)
-let nxt = field stackmark "nxt" string
-let size = field stackmark "stacknleft" PosixTypes.size_t
+let _stackp = field stackmark "stackp" (ptr void)
+let _nxt = field stackmark "nxt" string
+let _size = field stackmark "stacknleft" PosixTypes.size_t
 let () = seal stackmark
 
 let init_stack () =
@@ -234,10 +232,6 @@ let () = seal node
               
 let parsecmd_safe : int -> node union ptr =
   foreign "parsecmd_safe" (int @-> returning (ptr node))
-          
-let parse s =
-  setinputstring s; (* TODO set stack mark? *)
-  parsecmd_safe 0
 
 let neof : node union ptr = foreign_value "tokpushback" node
 let nerr : node union ptr = foreign_value "lasttoken" node
@@ -475,9 +469,9 @@ and show_arg (s : char list) (bqlist : nodelist structure ptr) stack =
   (* we have to look at the string and interpret control characters... *)
   match s,stack with
   | [],[] -> "",[],bqlist,[]
-  | [],`CTLVar::stack' -> failwith "End of string before CTLENDVAR"
-  | [],`CTLAri::stack' -> failwith "End of string before CTLENDARI"
-  | [],`CTLQuo::stack' -> failwith "End of string before CTLQUOTEMARK"
+  | [],`CTLVar::_stack' -> failwith "End of string before CTLENDVAR"
+  | [],`CTLAri::_stack' -> failwith "End of string before CTLENDARI"
+  | [],`CTLQuo::_stack' -> failwith "End of string before CTLQUOTEMARK"
   (* CTLESC *)
   | '\129'::c::s',_ -> 
      let str,s'',bqlist',stack' = show_arg s' bqlist stack in
@@ -494,10 +488,10 @@ and show_arg (s : char list) (bqlist : nodelist structure ptr) stack =
      let str,s''',bqlist'',stack'' = show_arg s'' bqlist' stack' in
      "${" ^ v ^ "}" ^ str, s''', bqlist'', stack''
   (* CTLENDVAR *)
-  | '\131'::s',`CTLVar::stack' -> "",[],bqlist,stack' (* s' gets handled by CTLVAR *)
-  | '\131'::s',`CTLAri::stack' -> failwith "Saw CTLENDVAR before CTLENDARI"
-  | '\131'::s',`CTLQuo::stack' -> failwith "Saw CTLENDVAR before CTLQUOTEMARK"
-  | '\131'::s',[] -> failwith "Saw CTLENDVAR outside of CTLVAR"
+  | '\131'::_s',`CTLVar::stack' -> "",[],bqlist,stack' (* s' gets handled by CTLVAR *)
+  | '\131'::_s',`CTLAri::_stack' -> failwith "Saw CTLENDVAR before CTLENDARI"
+  | '\131'::_s',`CTLQuo::_stack' -> failwith "Saw CTLENDVAR before CTLQUOTEMARK"
+  | '\131'::_s',[] -> failwith "Saw CTLENDVAR outside of CTLVAR"
   (* CTLBACKQ *)
   | '\132'::s',_ ->
      if nullptr bqlist
@@ -516,9 +510,9 @@ and show_arg (s : char list) (bqlist : nodelist structure ptr) stack =
      "$((" ^ ari ^ "))" ^ str, s''', bqlist'', stack''
   (* CTLENDARI *)
   | '\135'::s',`CTLAri::stack' -> "",s',bqlist,stack'
-  | '\135'::s',`CTLVar::stack' -> failwith "Saw CTLENDARI before CTLENDVAR"
-  | '\135'::s',`CTLQuo::stack' -> failwith "Saw CTLENDARI before CTLQUOTEMARK"
-  | '\135'::s',[] -> failwith "Saw CTLENDARI outside of CTLARI"
+  | '\135'::_s',`CTLVar::_stack' -> failwith "Saw CTLENDARI before CTLENDVAR"
+  | '\135'::_s',`CTLQuo::_stack' -> failwith "Saw CTLENDARI before CTLQUOTEMARK"
+  | '\135'::_s',[] -> failwith "Saw CTLENDARI outside of CTLARI"
   (* CTLQUOTEMARK *)
   | '\136'::s',[`CTLQuo] -> "",s',bqlist,[]
   | '\136'::s',_ ->
@@ -554,6 +548,6 @@ and show_var (t : int) (s : char list) (bqlist : nodelist structure ptr) stack =
      let vsnul = if t land 0x10 = 1 then [] else [':'] in
      let mods,s'',bqlist',stack' = show_arg s' bqlist (`CTLVar::stack) in
      implode (var_name @ vsnul @ string_of_vs vstype) ^ mods, s'', bqlist', stack'
-  | _,c::s' -> failwith ("Expected '=' terminating variable name, found " ^ Char.escaped c)
+  | _,c::_s' -> failwith ("Expected '=' terminating variable name, found " ^ Char.escaped c)
   | _,[] -> failwith "Expected '=' terminating variable name, found EOF"
 

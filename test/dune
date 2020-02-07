@@ -1,0 +1,14 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; BUILDING TESTER  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(executable
+ (name test)
+ (modes byte exe)
+ (libraries libdash ctypes ctypes.foreign))
+
+;(test
+; (name round_trip)
+; (deps tester round_trip.sh runtest.sh (source_tree tests))
+; (action (run ./runtest.sh)))
+

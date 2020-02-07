@@ -84,14 +84,13 @@ let string_of_var_type = function
 
 
 open Ctypes
-open Foreign
 open Dash
 
 let skip = Command (-1,[],[],[])
 
 let special_chars : char list = explode "|&;<>()$`\\\"'"
 
-let needs_escaping c = List.mem c special_chars
+let _needs_escaping c = List.mem c special_chars
 
 let rec of_node (n : node union ptr) : t =
   if nullptr n

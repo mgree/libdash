@@ -48,3 +48,6 @@ m4
 libtool
 ltmain.sh
 ocamlprof.dump
+_build
+.merlin
+libdash.install

@@ -1,0 +1,22 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; BUILDING dash AS A LIBRARY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(data_only_dirs src)
+
+(library
+  (name libdash_c)
+  (public_name libdash.c)
+  (preprocess no_preprocessing)
+;  (self_build_stubs_archive (libdash_c))
+  )
+
+(rule
+  (deps (source_tree src) autogen.sh)
+  (targets dlldash.so libdash.a)
+  (action (progn
+            (run ./autogen.sh)
+            (run ./configure)
+            (run make)
+            (copy src/libdash.a libdash.a)
+            (copy src/dlldash.so dlldash.so))))
