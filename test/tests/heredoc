@@ -1,0 +1,9 @@
+x=foo
+
+cat <<EOF
+this is a multiline thing
+
+hey ${x}
+
+for real
+EOF

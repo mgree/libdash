@@ -2,10 +2,10 @@
 ; BUILDING TESTER  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(executable
+(test
  (name test)
- (modes byte exe)
- (libraries libdash ctypes ctypes.foreign))
+ (libraries libdash ctypes ctypes.foreign)
+ (deps (source_tree tests)))
 
 ;(test
 ; (name round_trip)

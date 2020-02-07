@@ -1,0 +1,10 @@
+f() {
+
+    cat <<EOF
+    what
+    is
+    the
+    
+    what
+    EOF
+}

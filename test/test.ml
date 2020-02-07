@@ -1,19 +1,7 @@
-let verbose = ref false
-let input_src : string option ref = ref None
-
-let set_input_src () =
-  match !input_src with
-  | None -> Dash.setinputtostdin ()
-  | Some f -> Dash.setinputfile f
-
-let parse_args () =
-  Arg.parse
-    ["-v",Arg.Set verbose,"verbose mode"]
-    (function | "-" -> input_src := None | f -> input_src := Some f)
-    "Final argument should be either a filename or - (for STDIN); only the last such argument is used"
-
 exception Parse_error
 
+open Libdash
+        
 let rec parse_all () : Ast.t list =
   let stackmark = Dash.init_stack () in
   match Dash.parse_next ~interactive:false () with
@@ -28,12 +16,43 @@ let rec parse_all () : Ast.t list =
      (* keep calm and carry on *)
      c::parse_all ()
 
+let read_file filename = 
+  let lines = ref [] in
+  let chan = open_in filename in
+  try
+    let rec go () =
+      lines := input_line chan :: !lines;
+      go ()
+    in
+    go ()
+  with End_of_file ->
+    close_in chan;
+    String.concat "\n" (List.rev !lines)
+     
+let round_trip f =
+  let contents = read_file f in
+  let contents_ss = Dash.alloc_stack_string contents in
+  Dash.setinputstring contents_ss;
+  let cs = parse_all () in
+  let rendering = String.concat "\n" (List.map Ast.to_string cs) in
+  let rendering_ss = Dash.alloc_stack_string rendering in
+  Dash.setinputstring rendering_ss;
+  let cs' = parse_all () in
+  let rendering' = String.concat "\n" (List.map Ast.to_string cs') in
+  rendering = rendering'
+     
 let main () = 
   Dash.initialize ();
-  parse_args ();
-  set_input_src ();
-  let cs = parse_all () in
-  List.map (fun c -> print_endline (Ast.to_string c)) cs
+  let files = Array.to_list (Sys.readdir "tests") in
+  List.iter
+    (fun name ->
+      let testfile = "tests/" ^ name in
+      Printf.printf "%s: %s\n%!" testfile
+        (try if round_trip testfile
+             then "OK"
+             else "FAILED"
+         with Parse_error -> "parse error"))
+    files
 ;;
 
 main ()
